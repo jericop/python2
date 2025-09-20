@@ -1,6 +1,6 @@
 # Python Paketo Buildpack
 
-## `gcr.io/paketo-buildpacks/python`
+## `docker.io/paketobuildpacks/python`
 
 The Python Paketo Buildpack provides a set of collaborating buildpacks to build a Python-based application
 These buildpacks include:
