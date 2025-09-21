@@ -106,6 +106,7 @@ jobs:
       env:
         GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
       run: |
+        set -x
         REPOSITORY="${GITHUB_REPOSITORY_OWNER/-/}/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
         IMAGE="index.docker.io/${REPOSITORY}"
 

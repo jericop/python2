@@ -92,6 +92,7 @@ jobs:
         tar -xzf build/buildpack.tgz -C $temp_dir/ buildpack.toml
         mkdir -p $temp_dir/build
         cp build/buildpack.tgz $temp_dir/build
+        echo "Creating buildpack-release-artifact.tgz"
         tar -cvzf build/buildpack-release-artifact.tgz -C $temp_dir $(ls $temp_dir)
         rm -rf $temp_dir
     - name: Create Release Notes
