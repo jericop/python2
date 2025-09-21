@@ -23,6 +23,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Dump github context
+      run: |
+        echo "GITHUB_CONTEXT:"
+        echo "$GITHUB_CONTEXT"
+        set -x
+        cat $GITHUB_EVENT_PATH
+      shell: bash
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+
     - name: Parse Event
       id: event
       run: |
@@ -104,8 +114,14 @@ jobs:
     - name: Push to DockerHub
       if: ${{  steps.parse_configs.outputs.push_to_dockerhub == 'true' }}
       id: push
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
       run: |
         set -x
+        echo "{{ github.repository }}: ${{ github.repository }}"
+        echo "{{ github.repository_owner }}: ${{ github.repository_owner }}"
+
         echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
         echo "GITHUB_REPOSITORY_OWNER=${GITHUB_REPOSITORY_OWNER}"
         REPOSITORY="${GITHUB_REPOSITORY_OWNER/-/}/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
