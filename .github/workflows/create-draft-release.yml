@@ -40,6 +40,30 @@ jobs:
         builder: ${{ fromJSON(needs.builders.outputs.builders) }}
       fail-fast: false  # don't cancel all test jobs when one fails
     steps:
+    - name: quick test and fail
+      id: quick_fail
+      env:
+        GITHUB_REPOSITORY2: ${{ github.repository }}
+        GITHUB_REPOSITORY_OWNER2: ${{ github.repository_owner }}
+      run: |
+        set -x
+        echo "{{ github.repository }}: ${{ github.repository }}"
+        echo "{{ github.repository_owner }}: ${{ github.repository_owner }}"
+
+        echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+        echo "GITHUB_REPOSITORY_OWNER: $GITHUB_REPOSITORY_OWNER"
+        REPOSITORY="${GITHUB_REPOSITORY_OWNER/-/}/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
+        IMAGE="index.docker.io/${REPOSITORY}"
+        echo "image=${IMAGE}"
+
+        echo "GITHUB_REPOSITORY2: $GITHUB_REPOSITORY2"
+        echo "GITHUB_REPOSITORY_OWNER2: $GITHUB_REPOSITORY_OWNER2"
+        REPOSITORY2="${GITHUB_REPOSITORY_OWNER2/-/}/${GITHUB_REPOSITORY2#${GITHUB_REPOSITORY_OWNER2}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
+        IMAGE2="index.docker.io/${REPOSITORY2}"
+        echo "image2=${IMAGE2}"
+
+        echo "quick fail"
+        exit 1
     - name: Checkout
       uses: actions/checkout@v4
     - name: Setup Go
