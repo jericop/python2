@@ -4,6 +4,7 @@ on:
   release:
     types:
     - published
+  workflow_dispatch: {}
 env:
   REGISTRIES_FILENAME: "registries.json"
   GCR_REGISTRY: "gcr.io"
@@ -103,12 +104,14 @@ jobs:
     - name: Push to DockerHub
       if: ${{  steps.parse_configs.outputs.push_to_dockerhub == 'true' }}
       id: push
-      env:
-        GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
       run: |
         set -x
+        echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
+        echo "GITHUB_REPOSITORY_OWNER=${GITHUB_REPOSITORY_OWNER}"
         REPOSITORY="${GITHUB_REPOSITORY_OWNER/-/}/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
         IMAGE="index.docker.io/${REPOSITORY}"
+        echo "REPOSITORY=${REPOSITORY}"
+        echo "IMAGE=${IMAGE}"
 
         ./scripts/publish.sh \
           --image-ref "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}"
