@@ -31,14 +31,13 @@ jobs:
         echo "tag_full=${FULL_VERSION}" >> "$GITHUB_OUTPUT"
         echo "tag_minor=${MINOR_VERSION}" >> "$GITHUB_OUTPUT"
         echo "tag_major=${MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "download_url=$(jq -r '.release.assets[] | select(.name | endswith(".cnb")) | .url' "${GITHUB_EVENT_PATH}")" >> "$GITHUB_OUTPUT"
+        echo "download_tgz_file_url=$(jq -r '.release.assets[] | select(.name | endswith(".tgz")) | .url' "${GITHUB_EVENT_PATH}")" >> "$GITHUB_OUTPUT"
 
-    - name: Download
-      id: download
+    - name: Download .tgz buildpack release artifact
       uses: paketo-buildpacks/github-config/actions/release/download-asset@main
       with:
-        url: ${{ steps.event.outputs.download_url }}
-        output: "/github/workspace/buildpackage.cnb"
+        url: ${{ steps.event.outputs.download_tgz_file_url }}
+        output: "/github/workspace/buildpack-release-artifact.tgz"
         token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
 
     - name: Parse Configs
@@ -61,14 +60,20 @@ jobs:
         echo "push_to_dockerhub=${push_to_dockerhub}" >> "$GITHUB_OUTPUT"
         echo "push_to_gcr=${push_to_gcr}" >> "$GITHUB_OUTPUT"
 
-    - name: Validate version
+    - name: Install yj and crane
+      uses: buildpacks/github-actions/setup-tools@v5.5.4
+
+    - name: Validate version and extract buildpack release artifact
       run: |
-        buidpackTomlVersion=$(sudo skopeo inspect "oci-archive:${GITHUB_WORKSPACE}/buildpackage.cnb" | jq -r '.Labels."io.buildpacks.buildpackage.metadata" | fromjson | .version')
+        buidpackTomlVersion=$(tar -xzf buildpack-release-artifact.tgz --to-stdout buildpack.toml  | yj -tj | jq -r .buildpack.version)
         githubReleaseVersion="${{ steps.event.outputs.tag_full }}"
         if [[ "$buidpackTomlVersion" != "$githubReleaseVersion" ]]; then
           echo "Version in buildpack.toml ($buidpackTomlVersion) and github release ($githubReleaseVersion) are not identical"
           exit 1
         fi
+
+        # Extract the buildpack release artifact to the workspace for scripts/publish.sh to use
+        tar -xvzf buildpack-release-artifact.tgz
 
     - name: Docker login docker.io
       uses: docker/login-action@v3
@@ -84,8 +89,6 @@ jobs:
         username: ${{ env.GCR_USERNAME }}
         password: ${{ env.GCR_PASSWORD }}
         registry: ${{ env.GCR_REGISTRY }}
-
-    - uses: buildpacks/github-actions/setup-tools@v5.5.4
 
     - name: Push to GCR
       if: ${{  steps.parse_configs.outputs.push_to_gcr == 'true' }}

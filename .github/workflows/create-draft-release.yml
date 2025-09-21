@@ -83,7 +83,17 @@ jobs:
         fi
         echo "tag=${tag}" >> "$GITHUB_OUTPUT"
     - name: Package
-      run: ./scripts/package.sh --version "${{ steps.tag.outputs.tag }}"
+      run: |
+        ./scripts/package.sh --version "${{ steps.tag.outputs.tag }}"
+
+        # Create an archive with everything needed to run `pack buildpack package` and push to a registry
+        temp_dir=$(mktemp -d)
+        cp package.toml $temp_dir/
+        tar -xzf build/buildpack.tgz -C $temp_dir/ buildpack.toml
+        mkdir -p $temp_dir/build
+        cp build/buildpack.tgz $temp_dir/build
+        tar -cvzf build/buildpack-release-artifact.tgz -C $temp_dir $(ls $temp_dir)
+        rm -rf $temp_dir
     - name: Create Release Notes
       id: create-release-notes
       uses: paketo-buildpacks/github-config/actions/release/notes@main
@@ -106,6 +116,11 @@ jobs:
               "path": "build/buildpackage.cnb",
               "name": "${{ github.event.repository.name }}-${{ steps.tag.outputs.tag }}.cnb",
               "content_type": "application/x-tar"
+            },
+            {
+              "path": "build/buildpack-release-artifact",
+              "name": "${{ github.event.repository.name }}-${{ steps.tag.outputs.tag }}.tgz",
+              "content_type": "application/gzip"
             }
           ]
 
