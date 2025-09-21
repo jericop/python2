@@ -118,7 +118,7 @@ jobs:
               "content_type": "application/x-tar"
             },
             {
-              "path": "build/buildpack-release-artifact",
+              "path": "build/buildpack-release-artifact.tgz",
               "name": "${{ github.event.repository.name }}-${{ steps.tag.outputs.tag }}.tgz",
               "content_type": "application/gzip"
             }
