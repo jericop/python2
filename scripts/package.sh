@@ -137,8 +137,11 @@ function buildpackage::create() {
       --format file
     )
 
-
-  args+=("${flags[@]}")
+  for i in ${!flags[@]}; do
+    if [ ! -z ${flags[$i]} ]; then
+      args+=("${flags[$i]}")
+    fi
+  done
 
   pack \
     buildpack package "${output}" \
